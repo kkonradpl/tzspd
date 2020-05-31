@@ -1,0 +1,11 @@
+[Unit]
+Description=TZSP repeater
+After=network.target
+
+[Service]
+Type=forking
+User=mtscan
+ExecStart=tzspd -db 37000-37002
+
+[Install]
+WantedBy=multi-user.target
