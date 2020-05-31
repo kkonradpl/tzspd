@@ -10,6 +10,8 @@ This software receives TZSP packets and can send them to several applications at
 
 It was originally written to run several instances of [MTscan](https://github.com/kkonradpl/mtscan/) at the same time in the sniffer mode.
 
+GNU/Linux and Windows (MINGW) operating systems are supported.
+
 # Usage
 You can specify as many output ports as you want:
 ```sh
@@ -32,7 +34,7 @@ $ tzspd -h
 ```
 
 # Build
-In order to build MTscan you will need:
+In order to build tzspd you will need:
 - CMake
 - C compiler
 
