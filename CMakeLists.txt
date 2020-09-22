@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(tzspd)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -D_GNU_SOURCE")
 
 set(SOURCE_FILES
         addr-list.c

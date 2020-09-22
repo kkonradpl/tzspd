@@ -28,7 +28,7 @@ struct addr_list
     uint16_t range;
     uint8_t *mac;
     struct addr_list *next;
-} typedef addr_list_t;
+};
 
 static uint8_t* addr_list_parse_mac(char*);
 

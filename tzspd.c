@@ -13,7 +13,6 @@
  *  GNU General Public License for more details.
  */
 
-#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -48,6 +47,10 @@ struct tzspd
     /* Configuration */
     uint8_t daemon;
     uint8_t beacon_mode;
+    uint8_t discard_mgmt;
+    uint8_t discard_ctrl;
+    uint8_t discard_data;
+    uint8_t discard_ext;
 
     /* Internal data */
     uint16_t input;
@@ -82,19 +85,10 @@ main(int   argc,
     }
 #endif
 
-    while((c = getopt(argc, argv, "dbhi:")) != -1)
+    while((c = getopt(argc, argv, "i:dbMCDEh")) != -1)
     {
         switch(c)
         {
-#ifndef _WIN32
-            case 'd':
-                context->daemon = 1;
-                break;
-#endif
-            case 'b':
-                context->beacon_mode = 1;
-                break;
-
             case 'i':
                 context->input = atoi(optarg);
                 if(context->input <= 0 || context->input > 65535)
@@ -102,6 +96,32 @@ main(int   argc,
                     tzspd_log(context->daemon, TZSPD_LOG_ERR, "Invalid input port (%d)", context->input);
                     return -1;
                 }
+                break;
+
+#ifndef _WIN32
+            case 'd':
+                context->daemon = 1;
+                break;
+#endif
+
+            case 'b':
+                context->beacon_mode = 1;
+                break;
+
+            case 'M':
+                context->discard_mgmt = 1;
+                break;
+
+            case 'C':
+                context->discard_ctrl = 1;
+                break;
+
+            case 'D':
+                context->discard_data = 1;
+                break;
+
+            case 'E':
+                context->discard_ext = 1;
                 break;
 
             case 'h':
@@ -202,13 +222,21 @@ static void
 tzspd_show_usage(char *arg)
 {
     printf("tzspd " VERSION " - TZSP repeater\n");
-    printf("%s usage: [ -d ] [ -b ] [ -i port ] port[,sensor] ...\n", arg);
+#ifndef _WIN32
+    printf("%s usage: [-i port] [-d] [-b] [-M] [-C] [-D] [-E] port[,sensor] ...\n", arg);
+#else
+    printf("%s usage: [-i port] [-b] [-M] [-C] [-D] [-E] port[,sensor] ...\n", arg);
+#endif
     printf("options:\n");
+    printf("  -i  UDP input port (default 37008)\n");
 #ifndef _WIN32
     printf("  -d  run server in background as daemon\n");
 #endif
     printf("  -b  pass only beacons packets (for MTscan)\n");
-    printf("  -i  UDP input port (default 37008)\n");
+    printf("  -M  discard 802.11 management frames\n");
+    printf("  -C  discard 802.11 control frames\n");
+    printf("  -D  discard 802.11 data frames\n");
+    printf("  -E  discard 802.11 extension frames\n");
 }
 
 static int
@@ -265,6 +293,7 @@ tzspd_loop(tzspd_t *context)
     const uint8_t *sensor_mac;
     const addr_list_t *node;
     uint16_t i;
+    uint8_t type;
 
     memset((char*)&addr_out, 0, sizeof(addr_out));
     addr_out.sin_family = AF_INET;
@@ -289,6 +318,16 @@ tzspd_loop(tzspd_t *context)
 
         /* Discard invalid packets */
         if(data_len < MAC80211_HEADER_LEN)
+            continue;
+
+        type = data[0] & 0x0Fu;
+        if(context->discard_mgmt && type == 0x00)
+            continue;
+        if(context->discard_ctrl && type == 0x04)
+            continue;
+        if(context->discard_data && type == 0x08)
+            continue;
+        if(context->discard_ext && type == 0x0C)
             continue;
 
         if(context->beacon_mode)
