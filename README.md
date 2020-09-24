@@ -28,6 +28,11 @@ For each output you can filter it by sensor MAC value:
 $ tzspd 7000,00:11:22:33:44:55 7001-7003,11:22:33:44:55:66
 ```
 
+You can also change the output IP address (default 127.0.0.1):
+```sh
+$ tzspd 10.0.0.1:7000 
+```
+
 For more information check:
 ```sh
 $ tzspd -h

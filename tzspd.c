@@ -37,7 +37,7 @@ typedef int socket_t;
 #include "utils.h"
 #include "tzsp-decap.h"
 
-#define VERSION "1.0"
+#define VERSION "1.1"
 #define TZSP_DEFAULT_PORT 0x9090
 #define SOCKET_BUFF_LEN 65536
 #define MAC80211_HEADER_LEN 24
@@ -140,14 +140,17 @@ main(int   argc,
         tmp = strdup(argv[i]);
         switch(addr_list_parse(&context->outputs, argv[i]))
         {
+            case ADDR_LIST_INVALID_MAC:
+                tzspd_log(context->daemon, TZSPD_LOG_ERR, "Invalid MAC address (%s)", tmp);
+                return -1;
             case ADDR_LIST_INVALID_PORT_RANGE:
                 tzspd_log(context->daemon, TZSPD_LOG_ERR, "Invalid port range (%s)", tmp);
                 return -1;
             case ADDR_LIST_INVALID_PORT:
                 tzspd_log(context->daemon, TZSPD_LOG_ERR, "Invalid port value (%s)", tmp);
                 return -1;
-            case ADDR_LIST_INVALID_MAC:
-                tzspd_log(context->daemon, TZSPD_LOG_ERR, "Invalid MAC address (%s)", tmp);
+            case ADDR_LIST_INVALID_IP:
+                tzspd_log(context->daemon, TZSPD_LOG_ERR, "Invalid IP address (%s)", tmp);
                 return -1;
             case ADDR_LIST_OK:
                 break;
@@ -223,7 +226,7 @@ tzspd_show_usage(char *arg)
 {
     printf("tzspd " VERSION " - TZSP repeater\n");
 #ifndef _WIN32
-    printf("%s usage: [-i port] [-d] [-b] [-M] [-C] [-D] [-E] port[,sensor] ...\n", arg);
+    printf("%s usage: [-i port] [-d] [-b] [-M] [-C] [-D] [-E] [ip:]port[,sensor] ...\n", arg);
 #else
     printf("%s usage: [-i port] [-b] [-M] [-C] [-D] [-E] port[,sensor] ...\n", arg);
 #endif
@@ -297,7 +300,6 @@ tzspd_loop(tzspd_t *context)
 
     memset((char*)&addr_out, 0, sizeof(addr_out));
     addr_out.sin_family = AF_INET;
-    addr_out.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     while(1)
     {
@@ -348,6 +350,7 @@ tzspd_loop(tzspd_t *context)
                (addr_list_get_mac(node) && sensor_mac &&
                 memcmp(addr_list_get_mac(node), sensor_mac, MAC_ADDR_LEN) == 0))
             {
+                addr_out.sin_addr.s_addr = addr_list_get_ip(node);
                 for(i = addr_list_get_port(node); i <= addr_list_get_range(node); i++)
                 {
                     addr_out.sin_port = htons(i);

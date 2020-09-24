@@ -17,13 +17,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #ifdef _WIN32
+#include <Winsock2.h>
 #include "win32.h"
 #endif
 #include "addr-list.h"
 
 struct addr_list
 {
+    in_addr_t ip;
     uint16_t port;
     uint16_t range;
     uint8_t *mac;
@@ -39,6 +43,7 @@ addr_list_parse(addr_list_t **list,
     addr_list_t *node;
     char *parse;
     char *ptr;
+    in_addr_t ip = INADDR_NONE;
     int port;
     int range = -1;
     uint8_t *mac = NULL;
@@ -54,9 +59,25 @@ addr_list_parse(addr_list_t **list,
 
     parse = ptr;
     ptr = strsep(&parse, "-");
-    port = atoi(ptr);
     if(parse)
         range = atoi(parse);
+
+    parse = ptr;
+    ptr = strsep(&parse, ":");
+    if(parse)
+    {
+        ip = inet_addr(ptr);
+        if(ip == INADDR_NONE)
+        {
+            free(mac);
+            return ADDR_LIST_INVALID_IP;
+        }
+        port = atoi(parse);
+    }
+    else
+    {
+        port = atoi(ptr);
+    }
 
     if(range < 0)
         range = port;
@@ -73,7 +94,11 @@ addr_list_parse(addr_list_t **list,
         return ADDR_LIST_INVALID_PORT_RANGE;
     }
 
+    if(ip == INADDR_NONE)
+       ip = inet_addr("127.0.0.1");
+
     node = malloc(sizeof(addr_list_t));
+    node->ip = ip;
     node->port = port;
     node->range = range;
     node->mac = mac;
@@ -95,6 +120,12 @@ addr_list_free(addr_list_t *node)
         free(node);
         node = tmp;
     }
+}
+
+in_addr_t
+addr_list_get_ip(const addr_list_t *list)
+{
+    return list->ip;
 }
 
 uint16_t

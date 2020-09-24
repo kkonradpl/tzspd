@@ -21,14 +21,16 @@
 typedef struct addr_list addr_list_t;
 typedef enum addr_list_status
 {
+    ADDR_LIST_INVALID_MAC = -4,
     ADDR_LIST_INVALID_PORT_RANGE = -3,
     ADDR_LIST_INVALID_PORT = -2,
-    ADDR_LIST_INVALID_MAC = -1,
+    ADDR_LIST_INVALID_IP = -1,
     ADDR_LIST_OK = 0
 } addr_list_status_t;
 
 addr_list_status_t addr_list_parse(addr_list_t**, char*);
 void addr_list_free(addr_list_t*);
+in_addr_t addr_list_get_ip(const addr_list_t*);
 uint16_t addr_list_get_port(const addr_list_t*);
 uint16_t addr_list_get_range(const addr_list_t*);
 const uint8_t* addr_list_get_mac(const addr_list_t*);
