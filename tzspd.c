@@ -337,7 +337,8 @@ tzspd_loop(tzspd_t *context)
             /* Discard other packets */
             if(!(data[0] == 0x80 || /* keep 802.11 beacon frames */
                  data[0] == 0x50 || /* keep 802.11 probe responses */
-                 (data[0] == 0x08 && data[1] == 0x90))) /* keep NV2 beacons */
+                 (data[0] == 0x08 && data[1] == 0x90) || /* keep NV2 beacons */
+                 (data[0] == 0xe0 && data[1] == 0x00)))  /* keep Cambium beacons */
             {
                 continue;
             }
