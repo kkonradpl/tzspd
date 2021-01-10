@@ -17,11 +17,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #ifdef _WIN32
 #include <Winsock2.h>
 #include "win32.h"
+#else
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 #include "addr-list.h"
 

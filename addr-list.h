@@ -18,6 +18,10 @@
 
 #define MAC_ADDR_LEN 6
 
+#ifdef __WIN32__
+typedef uint32_t in_addr_t;
+#endif
+
 typedef struct addr_list addr_list_t;
 typedef enum addr_list_status
 {
